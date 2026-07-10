@@ -62,22 +62,22 @@ class DataTransformation:
         datasets = {"train_set": train_set, "test_set": test_set}
     
         for key in datasets:
-            dataset = datasets[key]
+            dataset = datasets[key].copy()
             
             ##  creating a new field to store the Age of the customer
-            dataset['Age']=2022-dataset['Year_Birth']   
+            dataset['Age'] = 2022 - dataset['Year_Birth']   
 
             ###  recoding the customer's education level to numeric form (0: high-school, 1: diploma, 2: bachelors, 3: masters, and 4: doctorates)
-            dataset["Education"].replace({"Basic":0,"2n Cycle":1, "Graduation":2, "Master":3, "PhD":4},inplace=True)  
+            dataset["Education"] = dataset["Education"].replace({"Basic":0,"2n Cycle":1, "Graduation":2, "Master":3, "PhD":4})
 
             #  recoding the customer's marital status to numeric form (0: not living with a partner, 1: living with a partner) 
-            dataset['Marital_Status'].replace({"Married":1, "Together":1, "Absurd":0, "Widow":0, "YOLO":0, "Divorced":0, "Single":0,"Alone":0},inplace=True) 
+            dataset['Marital_Status'] = dataset['Marital_Status'].replace({"Married":1, "Together":1, "Absurd":0, "Widow":0, "YOLO":0, "Divorced":0, "Single":0,"Alone":0})
 
             #  creating a new field to store the number of children in the household
-            dataset['Children']=dataset['Kidhome']+dataset['Teenhome']
+            dataset['Children'] = dataset['Kidhome'] + dataset['Teenhome']
 
             #creating Family_Size
-            dataset['Family_Size']=dataset['Marital_Status']+dataset['Children']+1
+            dataset['Family_Size'] = dataset['Marital_Status'].astype(int) + dataset['Children'] + 1
 
 
 
@@ -86,15 +86,20 @@ class DataTransformation:
             dataset["Total Promo"] =  dataset["AcceptedCmp1"]+ dataset["AcceptedCmp2"]+ dataset["AcceptedCmp3"]+ dataset["AcceptedCmp4"]+ dataset["AcceptedCmp5"]
 
             ## The following code works out how long the customer has been with the company and store the total number of promotions the customers responded to
-            dataset['Dt_Customer']=pd.to_datetime(dataset['Dt_Customer'])
-            today=datetime.today()
+            dataset['Dt_Customer'] = pd.to_datetime(
+                dataset['Dt_Customer'],
+                errors='coerce',
+                dayfirst=True,
+                format='mixed',
+            )
+            today = datetime.today()
             dataset['Days_as_Customer']=(today-dataset['Dt_Customer']).dt.days
             dataset['Offers_Responded_To']=dataset['AcceptedCmp1']+dataset['AcceptedCmp2']+dataset['AcceptedCmp3']+dataset['AcceptedCmp4']+dataset['AcceptedCmp5']+dataset['Response']
             dataset["Parental Status"] = np.where(dataset["Children"] > 0, 1, 0)
 
             #dropping columns which are already used to create new features
             columns_to_drop = ['Year_Birth','Kidhome','Teenhome']
-            dataset.drop(columns = columns_to_drop, axis = 1, inplace=True)
+            dataset.drop(columns=columns_to_drop, inplace=True)
             dataset.rename(columns={"Marital_Status": "Marital Status","MntWines": "Wines","MntFruits":"Fruits",
                             "MntMeatProducts":"Meat","MntFishProducts":"Fish","MntSweetProducts":"Sweets",
                             "MntGoldProds":"Gold","NumWebPurchases": "Web","NumCatalogPurchases":"Catalog",
@@ -141,9 +146,11 @@ class DataTransformation:
             
             numeric_features = [feature for feature in train_set.columns if train_set[feature].dtype != 'O']
 
-
-            outlier_features = ["Wines","Fruits","Meat","Fish","Sweets","Gold","Age","Total_Spending"]
+            outlier_features = ["Wines", "Fruits", "Meat", "Fish", "Sweets", "Gold", "Age", "Total_Spending"]
             numeric_features = [x for x in numeric_features if x not in outlier_features]
+
+            if not numeric_features:
+                numeric_features = [col for col in train_set.columns if col not in outlier_features]
 
  
 
@@ -173,11 +180,10 @@ class DataTransformation:
             
             preprocessed_train_set = preprocessor.fit_transform(train_set)
             preprocessed_test_set = preprocessor.transform(test_set)
-            
-            
-            columns = train_set.columns
-            preprocessed_train_set =  pd.DataFrame(preprocessed_train_set, columns=columns)
-            preprocessed_test_set = pd.DataFrame(preprocessed_test_set, columns=columns)
+
+            columns = [col for col in train_set.columns if col in train_set.columns]
+            preprocessed_train_set = pd.DataFrame(preprocessed_train_set)
+            preprocessed_test_set = pd.DataFrame(preprocessed_test_set)
             
             preprocessor_obj_dir = os.path.dirname(self.data_transformation_config.transformed_object_file_path)
             os.makedirs(preprocessor_obj_dir, exist_ok=True)
@@ -227,10 +233,10 @@ class DataTransformation:
                 
                 
                 
-                X_train = labelled_train_set.drop(columns=[TARGET_COLUMN], axis=1)
+                X_train = labelled_train_set.drop(columns=[TARGET_COLUMN])
                 y_train = labelled_train_set[TARGET_COLUMN]
                 
-                X_test = labelled_test_set.drop(columns=[TARGET_COLUMN], axis=1)
+                X_test = labelled_test_set.drop(columns=[TARGET_COLUMN])
                 y_test = labelled_test_set[TARGET_COLUMN]
                 
                 train_arr = np.c_[

@@ -138,3 +138,16 @@ artifact
 
 #local fine
 test.ipynb
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
+
+# Temporary files
+*.tmp
+*.bak
+
+# Python virtual environment
+customer_categorize/

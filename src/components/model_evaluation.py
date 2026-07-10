@@ -2,8 +2,6 @@ from src.entity.config_entity import ModelEvaluationConfig
 from src.entity.artifact_entity import ModelTrainerArtifact, DataIngestionArtifact, ModelEvaluationArtifact, DataTransformationArtifact
 from sklearn.metrics import f1_score
 from src.exception import CustomerException
-from src.pipeline.prediction_pipeline import CustomerData
-from src.constant.training_pipeline import TARGET_COLUMN
 from src.logger import logging
 
 import sys
@@ -28,12 +26,12 @@ class EvaluateModelResponse:
     changed_accuracy: float
     best_model_metric_artifact: ClassificationMetricArtifact
 
-def convert_test_numpy_array_to_dataframe(array:str):
+def convert_test_numpy_array_to_dataframe(array, columns=None):
     """Converts numpy array to dataframe"""
-    prediction_config = Prediction_config().__dict__
-    columns = prediction_config['prediction_schema']['columns'].keys()
-    
-    
+    if columns is None:
+        prediction_config = Prediction_config().__dict__
+        columns = list(prediction_config['prediction_schema']['columns'].keys())
+
     dataframe = pd.DataFrame(array, columns=columns)
     return dataframe
 
@@ -68,13 +66,18 @@ class ModelEvaluation:
             test_arr = load_numpy_array_data(file_path=self.data_transformation_artifact.transformed_test_file_path)
             # x_test = pd.read_csv(self.data_ingestion_artifact.test_file_path)
             
-            x_test, y_test = pd.DataFrame(test_arr[:, :-1]), pd.DataFrame(test_arr[:, -1])
-            x_test = convert_test_numpy_array_to_dataframe(array= test_arr[:, :-1])
-           
+            x_test = test_arr[:, :-1]
+            y_test = test_arr[:, -1]
+            x_test = convert_test_numpy_array_to_dataframe(
+                array=x_test,
+                columns=[
+                    "Age", "Education", "Marital Status", "Parental Status", "Children", "Income",
+                    "Total_Spending", "Days_as_Customer", "Recency", "Wines", "Fruits", "Meat",
+                    "Fish", "Sweets", "Gold", "Web", "Catalog", "Store", "Discount Purchases",
+                    "Total Promo", "NumWebVisitsMonth"
+                ],
+            )
 
-            
-    
-          
             trained_model = self.utils.load_object(file_path=self.model_trainer_artifact.trained_model_file_path)
             # y.replace(TargetValueMapping().to_dict(), inplace=True)
             y_hat_trained_model = trained_model.predict(x_test)
