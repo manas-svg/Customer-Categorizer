@@ -1,191 +1,167 @@
 
 # Customer Personality Segmentation
 
-## Overview
+## Problem statement
 
-This repository implements a customer segmentation and prediction solution using unsupervised clustering and supervised classification. The project ingests customer records from MongoDB, performs exploratory data analysis and feature engineering, creates cluster labels using K-Means / Agglomerative clustering, and then trains a classification model to predict the segment for new customers.
+In this data science project, you will build a machine learning system which will be able predict the personality of the customer using machine learning algorithms. This project will be very usefull for malls, various stores and companies which are product based. Based on customer's personal details and purchase details, we can cluster them and we can predict the customer's cluster number using classification techniques.
 
-## What this project does
+## Solution Proposed
 
-- Loads the marketing campaign dataset into MongoDB
-- Exports feature-store data from MongoDB into the training pipeline
-- Runs EDA including missing value handling, correlation and VIF analysis
-- Builds clusters using PCA-assisted clustering and silhouette analysis
-- Converts cluster assignments into classification targets
-- Evaluates multiple classifiers and selects the best performing model
-- Stores trained model artifacts in AWS S3
-- Serves predictions through a FastAPI backend with a simple web UI
+Now the question is how to dynamically predict the cluster of the customer ?. One of the approaches which we can use of machine learning approach, where we can cluster the customer based on the details we have and predict the cluster type based on the domain knowledge and leverage previous customer data to predict the cluster.
 
-## Key skills used
+Dataset used
+ <html>
+<a href="https://github.com/entbappy/Branching-tutorial/blob/master/marketing_campaign.zip"> Dataset Link</a>
+</html>
 
-- Exploratory Data Analysis (EDA)
-- Data cleaning and missing value handling
-- Correlation analysis, VIF, and feature engineering
-- Dimensionality reduction with PCA
-- Clustering with K-Means and Agglomerative Clustering
-- Model selection and hyperparameter tuning with `GridSearchCV`
-- Classification using Logistic Regression, Random Forest, AdaBoost, and Gradient Boosting
-- Performance reporting with accuracy, classification report, and confusion matrix
-- Backend development using FastAPI and Jinja2 templates
-- MongoDB data ingestion and feature store export
-- AWS S3 for model storage and deployment artifacts
-- Modular ML pipeline design with ingestion, validation, transformation, training, evaluation, and pushing
 
-## What you will find in notebooks
 
-- `notebooks/EDA.ipynb`
-  - Exploratory Data Analysis
-  - Missing value detection (Income column)
-  - Correlation and VIF analysis
-  - Target-free dataset analysis and clustering preparation
+## Tech Stack Used
 
-- `notebooks/Feature_engineering_and_clustering.ipynb`
-  - Data preprocessing and scaling
-  - PCA and silhouette score analysis
-  - Comparison of K-Means and Agglomerative clustering
-  - Conclusion that K-Means is a strong candidate for cluster generation
+1. Python
+2. FastAPI
+3. Machine learning algorithms
+4. Docker
+5. MongoDB
 
-- `notebooks/Feature_Selection_and_classification.ipynb`
-  - Classification after clustering
-  - Train/test split and model comparison
-  - `GridSearchCV` hyperparameter tuning
-  - Best model selection via classification report and confusion matrix
-  - Logistic Regression identified as the best-performing model
+## Infrastructure required
 
-## Backend architecture
+1. AWS S3
+2. Azure
+3. Github Actions
 
-The backend is built with `FastAPI` and exposes:
+## How to run
 
-- `GET /` — renders the customer prediction form
-- `POST /` — accepts form input, runs prediction pipeline, and renders output
-- `GET /train` — triggers the training pipeline end-to-end
+Before you run this project make sure you have MongoDB Atlas account and you have the shipping dataset into it.
 
-Key backend files:
+Step 1. Cloning the repository.
 
-- `app.py` — FastAPI application and routing
-- `src/pipeline/train_pipeline.py` — orchestrates data ingestion, validation, transformation, training, evaluation, and S3 pushing
-- `src/pipeline/prediction_pipeline.py` — prepares input data and loads the model from S3 for prediction
+```
 
-## Data and infrastructure flow
-
-1. `scripts/load_mongodb_data.py` loads `notebooks/marketing_campaign.csv` into MongoDB
-2. `src/components/data_ingestion.py` reads MongoDB collection, drops schema-specified columns, and saves train/test CSVs
-3. `src/components/data_validation.py` validates data and optionally checks drift via Evidently
-4. `src/components/data_transformation.py` prepares transformed training data
-5. `src/components/model_trainer.py` trains the classifier
-6. `src/components/model_evaluation.py` validates model acceptance
-7. `src/components/model_pusher.py` uploads the trained model artifact to AWS S3
-8. `src/pipeline/prediction_pipeline.py` loads the S3 model and predicts new customer cluster labels
-
-## AWS and MongoDB usage
-
-- MongoDB is used as the source of truth for raw customer data
-- Environment variable names:
-  - `MONGO_DB_URL` (preferred)
-  - `MONGODB_URL` or `MONGODB_URI`
-- AWS S3 is used for model artifact storage via `boto3`
-- S3 bucket names defined in code:
-  - Training bucket: `customer-segmentation-bucket`
-  - Prediction data bucket: `sensor-datasource`
-
-## Installation and local run
-
-1. Clone the repository:
-
-```bash
 git clone https://github.com/Machine-Learning-01/Customer_segmentation.git
-cd Customer-Categorizer
+
 ```
 
-2. Create and activate your Python environment:
+Step 2. Create a conda environment.
 
-```bash
-python -m venv venv
-venv\Scripts\activate
 ```
 
-3. Install dependencies:
+conda create --prefix venv python=3.7 -y
 
-```bash
+```
+
+```
+
+conda activate venv/
+
+```
+
+Step 3. Install the requirements
+
+```
+
 pip install -r requirements.txt
+
 ```
 
-4. Configure environment variables using your AWS and MongoDB credentials:
-
-```powershell
-setx AWS_ACCESS_KEY_ID "<AWS_ACCESS_KEY_ID>"
-setx AWS_SECRET_ACCESS_KEY "<AWS_SECRET_ACCESS_KEY>"
-setx AWS_DEFAULT_REGION "<AWS_DEFAULT_REGION>"
-setx MONGO_DB_URL "<your_mongo_db_connection_string>"
-```
-
-5. Load data into MongoDB:
+Step 4. Export the environment variable
 
 ```bash
-python scripts/load_mongodb_data.py
+
+export AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+
+
+export AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
+
+
+export AWS_DEFAULT_REGION=<AWS_DEFAULT_REGION>
+
+
+export MONGODB_URL= <MONGODB_URL>
+
+
 ```
 
-6. Run the FastAPI app:
+Step 5. Run the application server
 
-```bash
+```
+
 python app.py
+
 ```
 
-7. Access the app:
-
-- Training endpoint: `http://localhost:5000/train`
-- Frontend: `http://localhost:5000/`
-
-## Docker (optional)
-
-Build and run the container locally:
+Step 6. Train application
 
 ```bash
-docker build --build-arg AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID> --build-arg AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY> --build-arg AWS_DEFAULT_REGION=<AWS_DEFAULT_REGION> --build-arg MONGODB_URL=<MONGODB_URL> .
+
+http://localhost:5000/train
+
+```
+
+Step 7. Prediction application
+
+```bash
+
+http://localhost:5000/predict
+
+```
+
+## Run locally
+
+1. Check if the Dockerfile is available in the project directory
+2. Build the Docker image
+
+```
+
+docker build --build-arg AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID> --build-arg AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY> --build-arg AWS_DEFAULT_REGION=<AWS_DEFAULT_REGION> --build-arg MONGODB_URL=<MONGODB_URL> . 
+
+```
+
+3. Run the Docker image
+
+```
 
 docker run -d -p 5000:5000 <IMAGE_NAME>
+
 ```
 
-## Alternative AWS scope
+## Project Architecture -
 
-A production-ready AWS alternative architecture could include:
+![WhatsApp Image 2022-09-22 at 15 29 19](https://user-images.githubusercontent.com/71321529/192722336-54016f79-89ef-4c8c-9d71-a6e91ebab03f.jpeg)
 
-- **API Gateway + AWS Lambda** for serverless prediction endpoints
-- **Amazon SageMaker** for training and model hosting
-- **Amazon DynamoDB** for metadata and feature-store indexing
-- **Amazon S3** for dataset, artifacts, and model versions
-- **AWS Step Functions** for orchestrating training, evaluation, and deployment workflows
-- **CodePipeline / CodeBuild** for CI/CD
+## Data Collection Architecture -
 
-This alternative would shift the app from a single `FastAPI` service to a managed serverless / MLOps workflow while preserving the same data and model logic.
+![WhatsApp Image 2022-09-22 at 15 29 10](https://user-images.githubusercontent.com/71321529/192721926-de265f9b-f301-4943-ac7d-948bff7be9a0.jpeg)
 
-## Future scope
+## Deployment Architecture -
 
-- Add end-to-end CI/CD with tests, linting, and deployment automation
-- Implement model monitoring and drift detection
-- Add more classification algorithms and ensemble stacking
-- Build a REST API contract with OpenAPI and versioned model endpoints
-- Support batch scoring and real-time scoring separately
-- Add user authentication and access control for predictions
-- Expand the feature store and include more customer behavior signals
-- Move from CSV artifact storage to a managed feature store service
+![deployment](https://user-images.githubusercontent.com/104005791/199660875-c8e63457-432a-44cb-8a95-800870f3da15.png)
 
-## Folder structure summary
+## Models Used
 
-- `app.py` — FastAPI entry point
-- `scripts/` — utility scripts for data loading and setup
-- `src/components/` — pipeline components for ingestion, transformation, training, evaluation, pushing
-- `src/configuration/` — AWS and MongoDB connection configuration
-- `src/cloud_storage/` — S3 storage helper classes
-- `src/pipeline/` — pipeline orchestration for training and prediction
-- `src/entity/` — configuration and artifact schema classes
-- `src/constant/` — constants for app, AWS, MongoDB, training, and prediction
-- `notebooks/` — EDA, clustering, and classification exploration notebooks
+* [K-Means](https://www.javatpoint.com/k-means-clustering-algorithm-in-machine-learning)
+* [LogisticRegression](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html)
 
-## Notes
+From these above models after hyperparameter optimization we selected these two models which were K-Means for clustering and Logistic Regression for classification and used the following in Pipeline.
 
-- The model pipeline is designed to use MongoDB as the raw data backend and AWS S3 as the model artifact store.
-- The FastAPI backend accepts form-based customer input and returns predicted customer cluster labels.
-- The repository supports both local experimentation and a scalable AWS-backed artifact workflow.
+* GridSearchCV is used for Hyperparameter Optimization in the pipeline.
+
+## `src` is the main package folder which contains
+
+**Components** : Contains all components of Machine Learning Project
+
+- Data Ingestion
+- Data Validation
+- Data Transformation
+- Data Clustering
+- Model Trainer
+- Model Evaluation
+- Model Pusher
+
+**Custom Logger and Exceptions** are used in the Project for better debugging purposes.
+
+## Conclusion
+
+- This Project can be used in real-life by Users.
 
 
