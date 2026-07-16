@@ -1,28 +1,33 @@
-from fastapi import FastAPI, Request
+import os
+import socket
+import warnings
+from pathlib import Path
 from typing import Optional
+
+import uvicorn
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
-from uvicorn import run as app_run
-from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
-
+from src.constant.application import *
 from src.pipeline.prediction_pipeline import PredictionPipeline
 from src.pipeline.train_pipeline import TrainPipeline
-from src.constant.application import *
 
-import warnings
 warnings.filterwarnings('ignore')
 
+BASE_DIR = Path(__file__).resolve().parent
+TEMPLATES_DIR = BASE_DIR / "templates"
+STATIC_DIR = BASE_DIR / "static"
+
 app = FastAPI()
-
-
-templates = Jinja2Templates(directory='templates')
+templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 
 origins = ["*"]
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 app.add_middleware(
@@ -97,13 +102,27 @@ async def trainRouteClient():
         return Response(f"Error Occurred! {e}")
 
 
+def find_available_port(start_port: int = 8000) -> int:
+    port = int(os.getenv("PORT", start_port))
+    if port == 0:
+        return 0
+
+    while True:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            result = sock.connect_ex(("127.0.0.1", port))
+            if result != 0:
+                return port
+            port += 1
+
+
 @app.get("/")
 async def predictGetRouteClient(request: Request):
     try:
-
         return templates.TemplateResponse(
-            "customer.html",
-            {"request": request, "context": "Rendering"},
+            request=request,
+            name="customer.html",
+            context={"context": "Rendering"},
         )
 
     except Exception as e:
@@ -146,8 +165,9 @@ async def predictRouteClient(request: Request):
 
         # predicted_cluster = model_predictor.predict(customer_data_df)
         return templates.TemplateResponse(
-            "customer.html",
-            {"request": request, "context": int(predicted_cluster[0])}
+            request=request,
+            name="customer.html",
+            context={"context": int(predicted_cluster[0])}
         )
 
     except Exception as e:
@@ -155,5 +175,8 @@ async def predictRouteClient(request: Request):
 
 
 if __name__ == "__main__":
-    app_run(app, host = APP_HOST, port =APP_PORT)
+    host = os.getenv("HOST", "127.0.0.1")
+    port = find_available_port()
+    print(f"Starting FastAPI app at http://{host}:{port}")
+    uvicorn.run(app, host=host, port=port)
     
