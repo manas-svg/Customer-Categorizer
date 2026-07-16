@@ -133,9 +133,7 @@ docker run -d -p 5000:5000 <IMAGE_NAME>
 
 ![WhatsApp Image 2022-09-22 at 15 29 10](https://user-images.githubusercontent.com/71321529/192721926-de265f9b-f301-4943-ac7d-948bff7be9a0.jpeg)
 
-## Deployment Architecture -
 
-![deployment](https://user-images.githubusercontent.com/104005791/199660875-c8e63457-432a-44cb-8a95-800870f3da15.png)
 
 ## Models Used
 
